@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/DavoReds/pokego/commands"
 	"os"
 	"strings"
 )
@@ -15,7 +16,7 @@ func cleanInput(text string) []string {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	commandMap := commands()
+	commandMap := commands.GetCommands()
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -32,7 +33,7 @@ func main() {
 		command, ok := commandMap[commandName]
 
 		if ok {
-			err := command.callback()
+			err := command.Callback()
 			if err != nil {
 				fmt.Println(err)
 			}
