@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/DavoReds/pokego/commands"
 	"os"
 	"strings"
 )
@@ -16,7 +15,12 @@ func cleanInput(text string) []string {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	commandMap := commands.GetCommands()
+	commandMap := getCommands()
+	map_endpoint := "https://pokeapi.co/api/v2/location-area"
+	config := config{
+		next:     &map_endpoint,
+		previous: nil,
+	}
 
 	for {
 		fmt.Print("Pokedex > ")
@@ -33,7 +37,7 @@ func main() {
 		command, ok := commandMap[commandName]
 
 		if ok {
-			err := command.Callback()
+			err := command.callback(&config)
 			if err != nil {
 				fmt.Println(err)
 			}
