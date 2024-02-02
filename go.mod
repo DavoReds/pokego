@@ -1,3 +1,3 @@
 module github.com/DavoReds/pokego
 
-go 1.22rc2
+go 1.21.6

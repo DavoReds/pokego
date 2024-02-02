@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/DavoReds/pokego/internal/pokecache"
+	"github.com/DavoReds/pokego/internal/repl"
 )
 
 func cleanInput(text string) []string {
@@ -15,11 +19,13 @@ func cleanInput(text string) []string {
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	commandMap := getCommands()
+	commandMap := repl.GetCommands()
 	map_endpoint := "https://pokeapi.co/api/v2/location-area"
-	config := config{
-		next:     &map_endpoint,
-		previous: nil,
+	duration := time.Second * 5
+	config := repl.Config{
+		Next:     &map_endpoint,
+		Previous: nil,
+		Cache:    *pokecache.NewCache(duration),
 	}
 
 	for {
@@ -37,7 +43,7 @@ func main() {
 		command, ok := commandMap[commandName]
 
 		if ok {
-			err := command.callback(&config)
+			err := command.Callback(&config)
 			if err != nil {
 				fmt.Println(err)
 			}

@@ -16,20 +16,24 @@ type MapResponse struct {
 	} `json:"results"`
 }
 
-func GetMapAreas(url string) (MapResponse, error) {
+func GetMapAreas(url string) ([]byte, error) {
 	res, err := http.Get(url)
 	if err != nil {
-		return MapResponse{}, err
+		return []byte{}, err
 	}
 
 	body, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		return MapResponse{}, err
+		return []byte{}, err
 	}
 
+	return body, nil
+}
+
+func ParseMapAreas(body []byte) (MapResponse, error) {
 	response := MapResponse{}
-	err = json.Unmarshal(body, &response)
+	err := json.Unmarshal(body, &response)
 	if err != nil {
 		return MapResponse{}, err
 	}
