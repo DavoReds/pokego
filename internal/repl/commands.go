@@ -35,6 +35,11 @@ func GetCommands() map[string]CliCommand {
 			Description: "Returns information about the next 20 locations",
 			Callback:    mapbCommand,
 		},
+		"explore": {
+			Name:        "explore",
+			Description: "Explore an area for Pokémon",
+			Callback:    exploreCommand,
+		},
 	}
 
 	return commands
@@ -119,6 +124,36 @@ func mapbCommand(conf *Config, args []string) error {
 
 	for _, result := range areas.Results {
 		fmt.Println(result.Name)
+	}
+
+	return nil
+}
+
+func exploreCommand(conf *Config, args []string) error {
+	if len(args) == 0 {
+		return errors.New("What area do you want to explore?")
+	}
+
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", args[0])
+	var response []byte
+
+	if cached, exists := conf.Cache.Get(url); exists {
+		response = cached
+	} else {
+		apiRespose, err := pokeapi.Get(url)
+		if err != nil {
+			return err
+		}
+		response = apiRespose
+	}
+
+	var area pokeapi.ExploreResponse
+	if err := pokeapi.Parse(response, &area); err != nil {
+		return errors.New("Something's fishy about that area")
+	}
+
+	for _, pokemon := range area.PokemonEncounters {
+		fmt.Println(" - ", pokemon.Pokemon.Name)
 	}
 
 	return nil
