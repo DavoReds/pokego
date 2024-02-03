@@ -10,7 +10,7 @@ import (
 type CliCommand struct {
 	Name        string
 	Description string
-	Callback    func(conf *Config) error
+	Callback    func(conf *Config, args []string) error
 }
 
 func GetCommands() map[string]CliCommand {
@@ -40,7 +40,7 @@ func GetCommands() map[string]CliCommand {
 	return commands
 }
 
-func helpCommand(conf *Config) error {
+func helpCommand(conf *Config, args []string) error {
 	fmt.Print("\n")
 	fmt.Println("Welcome to the Pokédex!\nUsage:")
 	fmt.Print("\n")
@@ -54,12 +54,12 @@ func helpCommand(conf *Config) error {
 	return nil
 }
 
-func exitCommand(conf *Config) error {
+func exitCommand(conf *Config, args []string) error {
 	os.Exit(0)
 	return nil
 }
 
-func mapCommand(conf *Config) error {
+func mapCommand(conf *Config, args []string) error {
 	if conf.Next == nil {
 		return errors.New("No more areas. You're done!")
 	}
@@ -69,7 +69,7 @@ func mapCommand(conf *Config) error {
 	if cached, exists := conf.Cache.Get(*conf.Next); exists {
 		response = cached
 	} else {
-		apiRespose, err := pokeapi.GetMapAreas(*conf.Next)
+		apiRespose, err := pokeapi.Get(*conf.Next)
 		if err != nil {
 			return err
 		}
@@ -77,8 +77,8 @@ func mapCommand(conf *Config) error {
 		response = apiRespose
 	}
 
-	areas, err := pokeapi.ParseMapAreas(response)
-	if err != nil {
+	var areas pokeapi.MapResponse
+	if err := pokeapi.Parse(response, &areas); err != nil {
 		return err
 	}
 
@@ -92,7 +92,7 @@ func mapCommand(conf *Config) error {
 	return nil
 }
 
-func mapbCommand(conf *Config) error {
+func mapbCommand(conf *Config, args []string) error {
 	if conf.Previous == nil {
 		return errors.New("Hold on! You haven't even started")
 	}
@@ -102,15 +102,15 @@ func mapbCommand(conf *Config) error {
 	if cached, exists := conf.Cache.Get(*conf.Previous); exists {
 		response = cached
 	} else {
-		apiRespose, err := pokeapi.GetMapAreas(*conf.Previous)
+		apiRespose, err := pokeapi.Get(*conf.Previous)
 		if err != nil {
 			return err
 		}
 		response = apiRespose
 	}
 
-	areas, err := pokeapi.ParseMapAreas(response)
-	if err != nil {
+	var areas pokeapi.MapResponse
+	if err := pokeapi.Parse(response, &areas); err != nil {
 		return err
 	}
 
