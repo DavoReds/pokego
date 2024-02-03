@@ -30,14 +30,22 @@ func main() {
 	for {
 		fmt.Print("Pokedex > ")
 
-		scanner.Scan()
-
-		if err := scanner.Err(); err != nil {
-			fmt.Println("Error reading input:", err)
-			return
+		if !scanner.Scan() {
+			err := scanner.Err()
+			if err == nil {
+				break
+			} else {
+				fmt.Println("\nError reading input:", err)
+				continue
+			}
 		}
 
 		commandWords := cleanInput(scanner.Text())
+
+		if len(commandWords) == 0 {
+			continue
+		}
+
 		commandName := commandWords[0]
 		command, ok := commandMap[commandName]
 
@@ -48,7 +56,7 @@ func main() {
 			}
 			continue
 		} else {
-			fmt.Println("Not a command")
+			fmt.Println("Not a command. Use `help` to find out what commands you can use")
 			continue
 		}
 	}
