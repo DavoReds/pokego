@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/DavoReds/pokego/internal/pokeapi"
-	"github.com/DavoReds/pokego/internal/pokeapi/types"
+	"github.com/DavoReds/pokego/internal/pokeapi/responses"
 )
 
 type CliCommand struct {
@@ -47,6 +47,11 @@ func GetCommands() map[string]CliCommand {
 			Name:        "catch",
 			Description: "Catch a Pokémon you just found",
 			Callback:    catchCommand,
+		},
+		"inspect": {
+			Name:        "inspect",
+			Description: "Get information about the Pokémon you've caught",
+			Callback:    inspectCommand,
 		},
 	}
 
@@ -90,7 +95,7 @@ func mapCommand(state *State, args []string) error {
 		response = apiRespose
 	}
 
-	var areas types.Map
+	var areas responses.Map
 	if err := pokeapi.Parse(response, &areas); err != nil {
 		return err
 	}
@@ -122,7 +127,7 @@ func mapbCommand(state *State, args []string) error {
 		response = apiRespose
 	}
 
-	var areas types.Map
+	var areas responses.Map
 	if err := pokeapi.Parse(response, &areas); err != nil {
 		return err
 	}
@@ -155,7 +160,7 @@ func exploreCommand(state *State, args []string) error {
 		response = apiRespose
 	}
 
-	var area types.Area
+	var area responses.Area
 	if err := pokeapi.Parse(response, &area); err != nil {
 		return errors.New("Something's fishy about that area")
 	}
@@ -187,7 +192,7 @@ func catchCommand(state *State, args []string) error {
 		response = apiRespose
 	}
 
-	var pokemon types.Pokemon
+	var pokemon responses.Pokemon
 	if err := pokeapi.Parse(response, &pokemon); err != nil {
 		return errors.New("I don't think that's a Pokémon...")
 	}
@@ -203,6 +208,34 @@ func catchCommand(state *State, args []string) error {
 		fmt.Println("You may now inspect it with the inspect command.")
 	} else {
 		fmt.Println(pokemon.Name, "escaped!")
+	}
+
+	return nil
+}
+
+func inspectCommand(state *State, args []string) error {
+	if len(args) == 0 {
+		return errors.New("What Pokémon would you like me to tell you about?")
+	}
+
+	pokemon, exists := state.Pokedex[args[0]]
+	if !exists {
+		return errors.New("You haven't caught that Pokémon. Keep trying!")
+	}
+
+	fmt.Println("Name:", pokemon.Name)
+	fmt.Println("Height:", pokemon.Height)
+	fmt.Println("Weight:", pokemon.Weight)
+	fmt.Println("Stats:")
+
+	for _, stat := range pokemon.Stats {
+		fmt.Printf("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
+	}
+
+	fmt.Println("Types:")
+
+	for _, typeInfo := range pokemon.Types {
+		fmt.Println("  -", typeInfo.Type.Name)
 	}
 
 	return nil

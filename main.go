@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DavoReds/pokego/internal/pokeapi/types"
+	"github.com/DavoReds/pokego/internal/pokeapi/responses"
 	"github.com/DavoReds/pokego/internal/pokecache"
 	"github.com/DavoReds/pokego/internal/repl"
 )
@@ -26,7 +26,7 @@ func main() {
 		Next:     &map_endpoint,
 		Previous: nil,
 		Cache:    *pokecache.NewCache(time.Second * 5),
-		Pokedex:  map[string]types.Pokemon{},
+		Pokedex:  map[string]responses.Pokemon{},
 	}
 
 	for {

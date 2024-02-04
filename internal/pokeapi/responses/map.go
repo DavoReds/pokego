@@ -1,4 +1,4 @@
-package types
+package responses
 
 type Map struct {
 	Count    int     `json:"count"`

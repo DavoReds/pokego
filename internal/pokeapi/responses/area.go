@@ -1,4 +1,4 @@
-package types
+package responses
 
 type Area struct {
 	ID                   int    `json:"id"`
