@@ -3,15 +3,17 @@ package repl
 import (
 	"errors"
 	"fmt"
+	"math/rand"
+	"os"
+
 	"github.com/DavoReds/pokego/internal/pokeapi"
 	"github.com/DavoReds/pokego/internal/pokeapi/types"
-	"os"
 )
 
 type CliCommand struct {
 	Name        string
 	Description string
-	Callback    func(conf *State, args []string) error
+	Callback    func(state *State, args []string) error
 }
 
 func GetCommands() map[string]CliCommand {
@@ -23,7 +25,7 @@ func GetCommands() map[string]CliCommand {
 		},
 		"exit": {
 			Name:        "exit",
-			Description: "Exit the Pokédex",
+			Description: "Exits the Pokédex",
 			Callback:    exitCommand,
 		},
 		"map": {
@@ -33,7 +35,7 @@ func GetCommands() map[string]CliCommand {
 		},
 		"mapb": {
 			Name:        "mapb",
-			Description: "Returns information about the next 20 locations",
+			Description: "Returns information about the previous 20 locations",
 			Callback:    mapbCommand,
 		},
 		"explore": {
@@ -41,12 +43,17 @@ func GetCommands() map[string]CliCommand {
 			Description: "Explore an area for Pokémon",
 			Callback:    exploreCommand,
 		},
+		"catch": {
+			Name:        "catch",
+			Description: "Catch a Pokémon you just found",
+			Callback:    catchCommand,
+		},
 	}
 
 	return commands
 }
 
-func helpCommand(conf *State, args []string) error {
+func helpCommand(state *State, args []string) error {
 	fmt.Print("\n")
 	fmt.Println("Welcome to the Pokédex!\nUsage:")
 	fmt.Print("\n")
@@ -60,22 +67,22 @@ func helpCommand(conf *State, args []string) error {
 	return nil
 }
 
-func exitCommand(conf *State, args []string) error {
+func exitCommand(state *State, args []string) error {
 	os.Exit(0)
 	return nil
 }
 
-func mapCommand(conf *State, args []string) error {
-	if conf.Next == nil {
+func mapCommand(state *State, args []string) error {
+	if state.Next == nil {
 		return errors.New("No more areas. You're done!")
 	}
 
 	var response []byte
 
-	if cached, exists := conf.Cache.Get(*conf.Next); exists {
+	if cached, exists := state.Cache.Get(*state.Next); exists {
 		response = cached
 	} else {
-		apiRespose, err := pokeapi.Get(*conf.Next)
+		apiRespose, err := pokeapi.Get(*state.Next)
 		if err != nil {
 			return err
 		}
@@ -88,8 +95,8 @@ func mapCommand(conf *State, args []string) error {
 		return err
 	}
 
-	conf.Previous = conf.Next
-	conf.Next = areas.Next
+	state.Previous = state.Next
+	state.Next = areas.Next
 
 	for _, result := range areas.Results {
 		fmt.Println(result.Name)
@@ -98,17 +105,17 @@ func mapCommand(conf *State, args []string) error {
 	return nil
 }
 
-func mapbCommand(conf *State, args []string) error {
-	if conf.Previous == nil {
+func mapbCommand(state *State, args []string) error {
+	if state.Previous == nil {
 		return errors.New("Hold on! You haven't even started")
 	}
 
 	var response []byte
 
-	if cached, exists := conf.Cache.Get(*conf.Previous); exists {
+	if cached, exists := state.Cache.Get(*state.Previous); exists {
 		response = cached
 	} else {
-		apiRespose, err := pokeapi.Get(*conf.Previous)
+		apiRespose, err := pokeapi.Get(*state.Previous)
 		if err != nil {
 			return err
 		}
@@ -120,8 +127,8 @@ func mapbCommand(conf *State, args []string) error {
 		return err
 	}
 
-	conf.Next = conf.Previous
-	conf.Previous = areas.Previous
+	state.Next = state.Previous
+	state.Previous = areas.Previous
 
 	for _, result := range areas.Results {
 		fmt.Println(result.Name)
@@ -130,7 +137,7 @@ func mapbCommand(conf *State, args []string) error {
 	return nil
 }
 
-func exploreCommand(conf *State, args []string) error {
+func exploreCommand(state *State, args []string) error {
 	if len(args) == 0 {
 		return errors.New("What area do you want to explore?")
 	}
@@ -138,7 +145,7 @@ func exploreCommand(conf *State, args []string) error {
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", args[0])
 	var response []byte
 
-	if cached, exists := conf.Cache.Get(url); exists {
+	if cached, exists := state.Cache.Get(url); exists {
 		response = cached
 	} else {
 		apiRespose, err := pokeapi.Get(url)
@@ -155,6 +162,47 @@ func exploreCommand(conf *State, args []string) error {
 
 	for _, pokemon := range area.PokemonEncounters {
 		fmt.Println(" - ", pokemon.Pokemon.Name)
+	}
+
+	return nil
+}
+
+const catchChance = 700
+
+func catchCommand(state *State, args []string) error {
+	if len(args) == 0 {
+		return errors.New("What Pokémon do you want to catch?")
+	}
+
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", args[0])
+	var response []byte
+
+	if cached, exists := state.Cache.Get(url); exists {
+		response = cached
+	} else {
+		apiRespose, err := pokeapi.Get(url)
+		if err != nil {
+			return err
+		}
+		response = apiRespose
+	}
+
+	var pokemon types.Pokemon
+	if err := pokeapi.Parse(response, &pokemon); err != nil {
+		return errors.New("I don't think that's a Pokémon...")
+	}
+
+	fmt.Printf("Throwing a Pokéball at %s...\n", pokemon.Name)
+
+	catchOpportunity := catchChance - pokemon.BaseExperience
+	catchAttempt := rand.Intn(catchChance)
+
+	if catchAttempt < catchOpportunity {
+		state.Pokedex[pokemon.Name] = pokemon
+		fmt.Println(pokemon.Name, "was caught!")
+		fmt.Println("You may now inspect it with the inspect command.")
+	} else {
+		fmt.Println(pokemon.Name, "escaped!")
 	}
 
 	return nil

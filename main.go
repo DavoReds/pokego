@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DavoReds/pokego/internal/pokeapi/types"
 	"github.com/DavoReds/pokego/internal/pokecache"
 	"github.com/DavoReds/pokego/internal/repl"
 )
@@ -25,10 +26,11 @@ func main() {
 		Next:     &map_endpoint,
 		Previous: nil,
 		Cache:    *pokecache.NewCache(time.Second * 5),
+		Pokedex:  map[string]types.Pokemon{},
 	}
 
 	for {
-		fmt.Print("Pokedex > ")
+		fmt.Print("Pokédex > ")
 
 		if !scanner.Scan() {
 			err := scanner.Err()
