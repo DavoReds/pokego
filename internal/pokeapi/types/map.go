@@ -1,6 +1,6 @@
-package pokeapi
+package types
 
-type MapResponse struct {
+type Map struct {
 	Count    int     `json:"count"`
 	Next     *string `json:"next"`
 	Previous *string `json:"previous"`

@@ -1,6 +1,6 @@
-package pokeapi
+package types
 
-type ExploreResponse struct {
+type Area struct {
 	ID                   int    `json:"id"`
 	Name                 string `json:"name"`
 	GameIndex            int    `json:"game_index"`

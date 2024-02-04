@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DavoReds/pokego/internal/pokeapi"
+	"github.com/DavoReds/pokego/internal/pokeapi/types"
 	"os"
 )
 
 type CliCommand struct {
 	Name        string
 	Description string
-	Callback    func(conf *Config, args []string) error
+	Callback    func(conf *State, args []string) error
 }
 
 func GetCommands() map[string]CliCommand {
@@ -45,7 +46,7 @@ func GetCommands() map[string]CliCommand {
 	return commands
 }
 
-func helpCommand(conf *Config, args []string) error {
+func helpCommand(conf *State, args []string) error {
 	fmt.Print("\n")
 	fmt.Println("Welcome to the Pokédex!\nUsage:")
 	fmt.Print("\n")
@@ -59,12 +60,12 @@ func helpCommand(conf *Config, args []string) error {
 	return nil
 }
 
-func exitCommand(conf *Config, args []string) error {
+func exitCommand(conf *State, args []string) error {
 	os.Exit(0)
 	return nil
 }
 
-func mapCommand(conf *Config, args []string) error {
+func mapCommand(conf *State, args []string) error {
 	if conf.Next == nil {
 		return errors.New("No more areas. You're done!")
 	}
@@ -82,7 +83,7 @@ func mapCommand(conf *Config, args []string) error {
 		response = apiRespose
 	}
 
-	var areas pokeapi.MapResponse
+	var areas types.Map
 	if err := pokeapi.Parse(response, &areas); err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func mapCommand(conf *Config, args []string) error {
 	return nil
 }
 
-func mapbCommand(conf *Config, args []string) error {
+func mapbCommand(conf *State, args []string) error {
 	if conf.Previous == nil {
 		return errors.New("Hold on! You haven't even started")
 	}
@@ -114,7 +115,7 @@ func mapbCommand(conf *Config, args []string) error {
 		response = apiRespose
 	}
 
-	var areas pokeapi.MapResponse
+	var areas types.Map
 	if err := pokeapi.Parse(response, &areas); err != nil {
 		return err
 	}
@@ -129,7 +130,7 @@ func mapbCommand(conf *Config, args []string) error {
 	return nil
 }
 
-func exploreCommand(conf *Config, args []string) error {
+func exploreCommand(conf *State, args []string) error {
 	if len(args) == 0 {
 		return errors.New("What area do you want to explore?")
 	}
@@ -147,7 +148,7 @@ func exploreCommand(conf *Config, args []string) error {
 		response = apiRespose
 	}
 
-	var area pokeapi.ExploreResponse
+	var area types.Area
 	if err := pokeapi.Parse(response, &area); err != nil {
 		return errors.New("Something's fishy about that area")
 	}

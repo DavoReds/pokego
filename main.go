@@ -21,7 +21,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	commandMap := repl.GetCommands()
 	map_endpoint := "https://pokeapi.co/api/v2/location-area"
-	config := repl.Config{
+	config := repl.State{
 		Next:     &map_endpoint,
 		Previous: nil,
 		Cache:    *pokecache.NewCache(time.Second * 5),
