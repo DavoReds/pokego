@@ -50,8 +50,13 @@ func GetCommands() map[string]CliCommand {
 		},
 		"inspect": {
 			Name:        "inspect",
-			Description: "Get information about the Pokémon you've caught",
+			Description: "Get information about a Pokémon you've caught",
 			Callback:    inspectCommand,
+		},
+		"pokedex": {
+			Name:        "pokedex",
+			Description: "Get all the Pokémon you've caught",
+			Callback:    pokedexCommand,
 		},
 	}
 
@@ -236,6 +241,20 @@ func inspectCommand(state *State, args []string) error {
 
 	for _, typeInfo := range pokemon.Types {
 		fmt.Println("  -", typeInfo.Type.Name)
+	}
+
+	return nil
+}
+
+func pokedexCommand(state *State, args []string) error {
+	if len(args) > 0 {
+		return errors.New("Whoah, calm down, buddy")
+	}
+
+	fmt.Println("Your Pokédex:")
+
+	for pokemon := range state.Pokedex {
+		fmt.Println("  -", pokemon)
 	}
 
 	return nil
